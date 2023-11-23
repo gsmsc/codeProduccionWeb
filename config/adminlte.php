@@ -298,7 +298,14 @@ return [
         [
             'text'        => 'Líneas',
             'url'         => '/lineas/index',
-            'icon'        => 'fas fa-grip-lines-vertical'
+            'icon'        => 'fas fa-grip-lines-vertical',
+            'can'         => ''
+        ],
+        [
+            'text'        => 'Estilos',
+            'url'         => '/estilos/index',
+            'icon'        => 'fas fa-border-style',
+            'can '        => ''
         ],
     ],
 
