@@ -294,7 +294,12 @@ return [
             'url'         => '/home',
             'icon'        => 'fas fa-home'
         ],
-        ['header' => 'APARTADOS']
+        ['header' => 'APARTADOS'],
+        [
+            'text'        => 'Líneas',
+            'url'         => '/lineas/index',
+            'icon'        => 'fas fa-grip-lines-vertical'
+        ],
     ],
 
     /*

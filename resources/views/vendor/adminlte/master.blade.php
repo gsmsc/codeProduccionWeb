@@ -102,6 +102,8 @@
     @endif
     @endif
 
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     {{-- Custom Scripts --}}
     @yield('adminlte_js')
 
@@ -127,8 +129,75 @@
             background: #dedfe0;
             border-radius: 10px;
         }
+
+        .page-item.active .page-link {
+            z-index: 3;
+            color: #fff;
+            background-color: #35393d;
+            border-color: #0b0b0b;
+        }
+
+        .colored-toast.swal2-icon-success {
+            background-color: #5B7786 !important;
+        }
+
+        .colored-toast.swal2-icon-info {
+            background-color: #616971 !important;
+        }
+
+        .colored-toast .swal2-title {
+            color: white;
+        }
+
+        .colored-toast .swal2-close {
+            color: white;
+        }
+
+        .colored-toast .swal2-html-container {
+            color: white;
+        }
+
+        .alert-danger {
+            color: #fff;
+            background-color: #64393d !important;
+            border-color: #d32535;
+        }
     </style>
 
+    <script>
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top',
+            iconColor: 'white',
+            customClass: {
+                popup: 'colored-toast'
+            },
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true
+        });
+
+        @if($message = Session::get('success'))
+        Toast.fire({
+            icon: 'success',
+            title: '{{$message}}'
+        })
+        @endif
+
+        @if($message = Session::get('info'))
+        Toast.fire({
+            icon: 'info',
+            title: '{{$message}}'
+        })
+        @endif
+
+        @if($message = Session::get('warning'))
+        Toast.fire({
+            icon: 'warning',
+            title: '{{$message}}'
+        })
+        @endif
+    </script>
 </body>
 
 </html>
