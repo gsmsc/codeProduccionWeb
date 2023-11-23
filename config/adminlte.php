@@ -299,13 +299,30 @@ return [
             'text'        => 'Líneas',
             'url'         => '/lineas/index',
             'icon'        => 'fas fa-grip-lines-vertical',
-            'can'         => ''
+            'can'         => ['Lineas.Index']
         ],
         [
             'text'        => 'Estilos',
             'url'         => '/estilos/index',
             'icon'        => 'fas fa-border-style',
-            'can '        => ''
+            'can'        => ['Estilos.Index']
+        ],
+        [
+            'header' => 'ADMINISTRACIÓN',
+            'can' => ['Usuarios.Index', 'Roles.Index']
+        ],
+        [
+            'text'        => 'Usuarios',
+            'url'         => '/usuarios/index',
+            'icon'        => 'fas fa-user-cog',
+            'label_color' => 'success',
+            'can'        => ['Usuarios.Index']
+        ],
+        [
+            'text'        => 'Roles y permisos',
+            'url'         => '/roles/index',
+            'icon'        => 'fas fa-users-cog',
+            'can'         => ['Roles.Index']
         ],
     ],
 

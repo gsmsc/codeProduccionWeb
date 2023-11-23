@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\EstilosController;
 use App\Http\Controllers\LineasController;
+use App\Http\Controllers\RolesController;
+use App\Http\Controllers\UsuariosController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -31,5 +33,25 @@ Route::middleware([
         Route::put('/estilos/update', 'update')->name('estilos.update');
         Route::get('/estilos/getDataEstilo/{id}', 'getDataEstilo')->name('estilos.getDataEstilo');
         Route::delete('/estilos/destroy/{id}', 'destroy')->name('estilos.destroy');
+    });
+
+    Route::controller(RolesController::class)->group(function () {
+        Route::get('/roles/index', 'index')->name('roles.index');
+        Route::get('/roles/create', 'create')->name('roles.create');
+        Route::post('/roles/store', 'store')->name('roles.store');
+        Route::get('/roles/edit/{id}', 'edit')->name('roles.edit');
+        Route::delete('/roles/destroy/{id}', 'destroy')->name('roles.destroy');
+        Route::put('/roles/update/{id}', 'update')->name('roles.update');
+    });
+
+    Route::controller(UsuariosController::class)->group(function () {
+        Route::get('/usuarios/index', 'index')->name('usuarios.index');
+        Route::get('/usuarios/create', 'create')->name('usuarios.create');
+        Route::post('/usuarios/store', 'store')->name('usuarios.store');
+        Route::get('/usuarios/edit/{idUsuario}', 'edit')->name('usuarios.edit');
+        Route::put('/usuarios/update/{idUsuario}', 'update')->name('usuarios.update');
+        Route::delete('/usuarios/destroy/{idUsuario}', 'destroy')->name('usuarios.destroy');
+        Route::get('/usuarios/configuracion', 'configuracion')->name('usuarios.configuracion');
+        Route::put('/usuarios/actualizarDatosUsuario/{id}', 'actualizarDatosUsuario')->name('usuarios.actualizarDatosUsuario');
     });
 });
