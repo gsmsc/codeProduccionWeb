@@ -10,6 +10,12 @@ class Estilos extends Model
 
     protected $fillable = [
         'id',
+        'codigo',
+        'idCliente',
+        'idDivision',
+        'idSubcategoria',
+        'referencia1',
+        'referencia2',
         'descripcion'
     ];
 }

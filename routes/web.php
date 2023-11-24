@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\EstilosController;
 use App\Http\Controllers\LineasController;
+use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\UsuariosController;
 use Illuminate\Support\Facades\Route;
@@ -30,8 +31,8 @@ Route::middleware([
     Route::controller(EstilosController::class)->group(function () {
         Route::get('/estilos/index', 'index')->name('estilos.index');
         Route::post('/estilos/store', 'store')->name('estilos.store');
-        Route::put('/estilos/update', 'update')->name('estilos.update');
-        Route::get('/estilos/getDataEstilo/{id}', 'getDataEstilo')->name('estilos.getDataEstilo');
+        Route::get('/estilos/edit/{id}', 'edit')->name('estilos.edit');
+        Route::put('/estilos/update/{id}', 'update')->name('estilos.update');
         Route::delete('/estilos/destroy/{id}', 'destroy')->name('estilos.destroy');
     });
 
@@ -53,5 +54,11 @@ Route::middleware([
         Route::delete('/usuarios/destroy/{idUsuario}', 'destroy')->name('usuarios.destroy');
         Route::get('/usuarios/configuracion', 'configuracion')->name('usuarios.configuracion');
         Route::put('/usuarios/actualizarDatosUsuario/{id}', 'actualizarDatosUsuario')->name('usuarios.actualizarDatosUsuario');
+    });
+
+    Route::controller(ProduccionController::class)->group(function () {
+        Route::get('/produccion/index', 'index')->name('produccion.index');
+        Route::get('/produccion/create', 'create')->name('produccion.create');
+        Route::post('/produccion/store', 'store')->name('produccion.store');
     });
 });

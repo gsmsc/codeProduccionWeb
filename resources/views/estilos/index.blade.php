@@ -50,21 +50,27 @@
                     <div class="table-responsive-md">
                         <table class="table table-striped table-hover table-bordered mt-2 text-center" id="CAT_estilos" style="width: 100%;">
                             <thead>
-                                <th width="8%">Id</th>
-                                <th>Descripci&oacute;n</th>
-                                <th width="15%">Acciones</th>
+                                <th width="7%">Id</th>
+                                <th width="14%">C&oacute;digo</th>
+                                <th>Cliente</th>
+                                <th>Divisi&oacute;n</th>
+                                <th>Subcategor&iacute;a</th>
+                                <th width="12%">Acciones</th>
                             </thead>
                             <tbody>
                                 @foreach($estilos as $items)
                                 <tr>
                                     <td>{{ $items->id }}</td>
-                                    <td>{{ $items->descripcion }}</td>
+                                    <td>{{ $items->codigo }}</td>
+                                    <td>{{ $items->nombreCliente }}</td>
+                                    <td>{{ $items->nombreDivision }}</td>
+                                    <td>{{ $items->nombreSubcategoria }}</td>
                                     <td class="text-center">
                                         <form action="{{ route('estilos.destroy', $items->id) }}" method="POST" class="formEliminarEstilo">
                                             @method('DELETE')
                                             @csrf
                                             @can('Estilos.Editar')
-                                            <a onclick="getDataEstilo('{{ $items->id }}')" class="btn btn-secondary btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="Editar">
+                                            <a href="{{ route('estilos.edit', $items->id) }}" class="btn btn-secondary btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="Editar">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
                                                     <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
                                                     <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
@@ -91,7 +97,7 @@
     </div>
 
     <div class="modal fade" id="modalCreateEstilos" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-md">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title"><strong style="color: #5D7785;">Registrar nuevo estilo</strong></h5>
@@ -100,7 +106,62 @@
                     <form method="POST" action="{{ route('estilos.store') }}" id="formEstilos" class="formEstilos">
                         @csrf
                         <div class="row">
-                            <div class="col-sm-12">
+                            <div class="col-sm-3 mt-2">
+                                <label for="codigo">C&oacute;digo</label>
+                                <input type="text" name="codigo" id="codigo" class="form-control text-uppercase @error('codigo') is-invalid @enderror" placeholder="..." maxlength="20" required>
+                            </div>
+                            <div class="col-sm-3 mt-2">
+                                <label for="idCliente">Cliente</label>
+                                <div class="input-group">
+                                    <select class="custom-select @error('idCliente') is-invalid @enderror" name="idCliente" id="idCliente" required>
+                                        <option selected value="">...</option>
+                                        @foreach($clientes as $item)
+                                        <option value="{{ $item->id }}" {{ old('idCliente') == $item->id ? 'selected' : '' }}>
+                                            {{ $item->nombre }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-3 mt-2">
+                                <label for="idDivision">Divisi&oacute;n</label>
+                                <div class="input-group">
+                                    <select class="custom-select @error('idDivision') is-invalid @enderror" name="idDivision" id="idDivision" required>
+                                        <option selected value="">...</option>
+                                        @foreach($division as $item)
+                                        <option value="{{ $item->id }}" {{ old('idDivision') == $item->id ? 'selected' : '' }}>
+                                            {{ $item->nombre }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-3 mt-2">
+                                <label for="idSubcategoria">Subcategor&iacute;a</label>
+                                <div class="input-group">
+                                    <select class="custom-select @error('idSubcategoria') is-invalid @enderror" name="idSubcategoria" id="idSubcategoria" required>
+                                        <option selected value="">...</option>
+                                        @foreach($subcategoria as $item)
+                                        <option value="{{ $item->id }}" {{ old('idSubcategoria') == $item->id ? 'selected' : '' }}>
+                                            {{ $item->nombre }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 mt-2">
+                                <label class="form-label" for="referencia1">Referencia #1</label>
+                                <input type="text" name="referencia1" id="referencia1" class="form-control text-uppercase @error('referencia1') is-invalid @enderror" placeholder="..." maxlength="150">
+                            </div>
+                            <div class="col-sm-6 mt-2">
+                                <label class="form-label" for="referencia2">Referencia #2</label>
+                                <input type="text" name="referencia2" id="referencia2" class="form-control text-uppercase @error('referencia2') is-invalid @enderror" placeholder="..." maxlength="150">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12 mt-2">
                                 <label class="form-label" for="descripcion">Descripci&oacute;n</label>
                                 <input type="text" name="descripcion" id="descripcion" class="form-control text-uppercase @error('descripcion') is-invalid @enderror" placeholder="..." maxlength="150" required>
                             </div>
@@ -109,35 +170,6 @@
                         <div class="col-sm-12 col-12">
                             <button type="submit" class="btn btn-success" style="background-color:#1A897A !important; float: right;">Registrar</button>
                             <button type="button" class="btn btn-dark mr-2" data-dismiss="modal" style="float: right;">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalEditEstilo" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-md">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><strong style="color: #5D7785;">Editar estilo</strong></h5>
-                    <a class="btn-close" data-bs-dismiss="modal" aria-label="Close"></a>
-                </div>
-                <div class="modal-body">
-                    <form method="POST" action="{{ route('estilos.update') }}" id="formEditarEstilo" class="formEditarEstilo">
-                        @method('PUT')
-                        @csrf
-                        <textarea name="estilo_id" id="estilo_id" class="d-none" cols="30" rows="10"></textarea>
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <label class="form-label" for="descripcionEstilo">Descripción</label>
-                                <input type="text" name="descripcion" id="descripcionEstilo" class="form-control text-uppercase @error('descripcion') is-invalid @enderror" placeholder="..." maxlength="150" required>
-                            </div>
-                        </div>
-                        <br>
-                        <div class="col-sm-12 col-12">
-                            <button type="submit" class="btn btn-success" style="background-color:#1A897A !important; float: right;">Actualizar</button>
-                            <button type="button" class="btn btn-dark mr-2" data-bs-dismiss="modal" style="float: right;">Cancelar</button>
                         </div>
                     </form>
                 </div>
@@ -175,6 +207,15 @@
                     orderable: true
                 },
                 {
+                    orderable: true
+                },
+                {
+                    orderable: true
+                },
+                {
+                    orderable: true
+                },
+                {
                     orderable: false
                 }
             ],
@@ -198,7 +239,7 @@
     });
 
     $('#modalCreateEstilos').on('hidden.bs.modal', function() {
-        $(this).find("input").val('').end();
+        $(this).find("input,select").val('').end();
         $("#descripcion").removeClass("is-invalid");
         if (document.getElementById('sectionErrors')) {
             document.getElementById('sectionErrors').style.display = 'none';
@@ -257,53 +298,5 @@
                 }, false);
             });
     })();
-
-    (function() {
-        'use strict';
-        var form = document.querySelectorAll('#formEditarEstilo');
-        form[0].addEventListener('submit', function(event) {
-            var contexto = this;
-            event.preventDefault();
-            event.stopPropagation();
-            if (true) {
-                function validate() {
-                    Swal.fire({
-                        title: '¿Está seguro de editar el estilo?',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#00887A',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Confirmar',
-                        cancelButtonText: 'Cancelar',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            contexto.submit();
-                        }
-                    })
-                }
-                validate();
-            }
-        }, false);
-    })();
-
-    function getDataEstilo(id) {
-        let url = "{{ route('estilos.getDataEstilo',':id') }}";
-        $.ajax({
-            url: url.replace(':id', id),
-            type: 'GET',
-            data: {
-                "id": id
-            },
-            success: function(data) {
-                $('#estilo_id').html(id);
-                $('#descripcionEstilo').val(data.descripcion);
-                $('#modalEditEstilo').modal('show');
-            },
-            error: function(xhr) {
-                alert('Request Status: ' + xhr.status + ' Status Text: ' + xhr.statusText + ' ' + xhr.responseText);
-                console.log(xhr);
-            }
-        })
-    }
 </script>
 @stop

@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('CAT_estilos', function (Blueprint $table) {
+        Schema::create('CAT_clientes', function (Blueprint $table) {
             $table->id();
-            $table->string('descripcion', 150)->nullable();
+            $table->string('nombre', 100);
             $table->timestamps();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('CAT_estilos');
+        Schema::dropIfExists('CAT_clientes');
     }
 };

@@ -10,17 +10,42 @@ class EstilosController extends Controller
 {
     public function index()
     {
-        $estilos = Estilos::all();
-        return view('estilos.index', compact('estilos'));
+        $clientes = DB::table('CAT_clientes')->get();
+        $division = DB::table('CAT_division')->get();
+        $subcategoria = DB::table('CAT_subcategoria')->get();
+        $estilos = DB::table('CAT_estilos as CEST')
+            ->select(
+                'CEST.id',
+                'CEST.codigo',
+                'CLE.nombre as nombreCliente',
+                'DIV.nombre as nombreDivision',
+                'CAT.nombre as nombreSubcategoria'
+            )
+            ->leftJoin('CAT_clientes as CLE', 'CEST.idCliente', '=', 'CLE.id')
+            ->leftJoin('CAT_division as DIV', 'CEST.idDivision', '=', 'DIV.id')
+            ->leftJoin('CAT_subcategoria as CAT', 'CEST.idSubcategoria', '=', 'CAT.id')
+            ->get();
+            
+        return view('estilos.index', compact('estilos', 'clientes', 'subcategoria', 'division'));
     }
 
     public function store(Request $request)
     {
         $validacionesInputs = [
-            'descripcion' => 'required|max:100',
+            'codigo' => 'required|max:50',
+            'idCliente' => 'nullable',
+            'idDivision' => 'nullable',
+            'idSubcategoria' => 'nullable',
+            'referencia1' => 'nullable|max:150',
+            'referencia2' => 'nullable|max:150',
+            'descripcion' => 'nullable|max:100',
         ];
 
         $respuestaValidaciones = [
+            'codigo.required' => 'El codigo es un valor requerido.',
+            'codigo.max' => 'El codigo no debe exceder de 50 caracteres.',
+            'referencia1.required' => 'La referencia #1 no debe exceder de 150 caracteres.',
+            'referencia2.required' => 'La referencia #2 no debe exceder de 150 caracteres.',
             'descripcion.required' => 'La descripción es un valor requerido.',
             'descripcion.max' => 'La descripción no debe exceder de 100 caracteres.'
         ];
@@ -30,7 +55,13 @@ class EstilosController extends Controller
         $input = $request->all();
 
         $arrayCreate = [
-            'descripcion' => strtoupper($input['descripcion']),
+            'codigo' => empty($input['codigo']) ? null : strtoupper($input['codigo']),
+            'idCliente' => empty($input['idCliente']) ? null : $input['idCliente'],
+            'idDivision' => empty($input['idDivision']) ? null : $input['idDivision'],
+            'idSubcategoria' => empty($input['idSubcategoria']) ? null : $input['idSubcategoria'],
+            'referencia1' => empty($input['referencia1']) ? null : strtoupper($input['referencia1']),
+            'referencia2' => empty($input['referencia2']) ? null : strtoupper($input['referencia2']),
+            'descripcion' => empty($input['descripcion']) ? null : strtoupper($input['descripcion'])
         ];
 
         Estilos::create($arrayCreate)->id;
@@ -38,23 +69,31 @@ class EstilosController extends Controller
         return redirect()->route('estilos.index')->with('success', 'Estilo grabado con éxito');
     }
 
-    public function getDataEstilo($idEstilo)
+    public function edit(Request $request, $id)
     {
-        $editEstilo = DB::table('CAT_estilos')
-            ->select('descripcion')
-            ->where('id', '=', $idEstilo)
-            ->first();
-
-        return $editEstilo;
+        $clientes = DB::table('CAT_clientes')->get();
+        $division = DB::table('CAT_division')->get();
+        $subcategoria = DB::table('CAT_subcategoria')->get();
+        $estilosEdit = Estilos::find($id);
+        return view('estilos.edit', compact('estilosEdit', 'clientes', 'division', 'subcategoria'));
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
         $validacionesInputs = [
-            'descripcion' => 'required|max:100',
+            'codigo' => 'nullable',
+            'idCliente' => 'nullable',
+            'idDivision' => 'nullable',
+            'idSubcategoria' => 'nullable',
+            'referencia1' => 'nullable|max:150',
+            'referencia2' => 'nullable|max:150',
+            'descripcion' => 'nullable|max:100'
         ];
 
         $respuestaValidaciones = [
+            'codigo.max' => 'El codigo no debe exceder de 50 caracteres.',
+            'referencia1.required' => 'La referencia #1 no debe exceder de 150 caracteres.',
+            'referencia2.required' => 'La referencia #2 no debe exceder de 150 caracteres.',
             'descripcion.required' => 'La descripción es un valor requerido.',
             'descripcion.max' => 'La descripción no debe exceder de 100 caracteres.'
         ];
@@ -63,10 +102,15 @@ class EstilosController extends Controller
         $input = $request->all();
 
         $arrayUpdate = [
-            'descripcion' => strtoupper($input['descripcion']),
+            'idCliente' => empty($input['idCliente']) ? null : $input['idCliente'],
+            'idDivision' => empty($input['idDivision']) ? null : $input['idDivision'],
+            'idSubcategoria' => empty($input['idSubcategoria']) ? null : $input['idSubcategoria'],
+            'referencia1' => empty($input['referencia1']) ? null : strtoupper($input['referencia1']),
+            'referencia2' => empty($input['referencia2']) ? null : strtoupper($input['referencia2']),
+            'descripcion' => empty($input['descripcion']) ? null : strtoupper($input['descripcion'])
         ];
 
-        $estilo = Estilos::find($request->estilo_id);
+        $estilo = Estilos::find($id);
         $estilo->update($arrayUpdate);
 
         return redirect()->route('estilos.index')->with('success', 'Estilo editado con éxito');
