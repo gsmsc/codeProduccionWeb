@@ -230,8 +230,11 @@
 
         function closeAlert() {
             $("#sectionErrors").fadeTo(5000, 500).slideUp(800, function() {
+                $("#codigo").removeClass("is-invalid");
                 $("#descripcion").removeClass("is-invalid");
-                $("#descripcionEstilo").removeClass("is-invalid");
+                $("#idCliente").removeClass("is-invalid");
+                $("#idDivision").removeClass("is-invalid");
+                $("#idSubcategoria").removeClass("is-invalid");
                 $("#sectionErrors").slideUp(3000);
             });
         }
@@ -240,7 +243,11 @@
 
     $('#modalCreateEstilos').on('hidden.bs.modal', function() {
         $(this).find("input,select").val('').end();
+        $("#codigo").removeClass("is-invalid");
         $("#descripcion").removeClass("is-invalid");
+        $("#idCliente").removeClass("is-invalid");
+        $("#idDivision").removeClass("is-invalid");
+        $("#idSubcategoria").removeClass("is-invalid");
         if (document.getElementById('sectionErrors')) {
             document.getElementById('sectionErrors').style.display = 'none';
         }

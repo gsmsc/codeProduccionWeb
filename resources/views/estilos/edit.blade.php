@@ -24,6 +24,19 @@
                 <form method="POST" action="{{ route('estilos.update', $estilosEdit->id) }}" id="formEditarEstilo">
                     @method('PUT')
                     @csrf
+                    @if ($errors->any())
+                    <div id="sectionErrors" class="form-group alert alert-danger">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close" id="closeErrors">
+                            <span aria-hidden="true" style="color: white;">&times;</span>
+                        </button>
+                        <label>Corrija los siguientes errores:</label>
+                        <ul style="margin-bottom: 0px !important;">
+                            @foreach ($errors->all() as $error)
+                            <li class="">{{$error}}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
                     <div class="card">
                         <div class="card-body">
                             <div class="row">
@@ -127,16 +140,20 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
 <script>
-    function closeAlert() {
-        $("#sectionErrors").fadeTo(5000, 500).slideUp(800, function() {
-            $("#name").removeClass("is-invalid");
-            $("#email").removeClass("is-invalid");
-            $("#pass").removeClass("is-invalid");
-            $("#idTipoUsuario").removeClass("is-invalid");
-            $("#sectionErrors").slideUp(3000);
-        });
-    }
-    closeAlert();
+    $(document).ready(function() {
+        function closeAlert() {
+            $("#sectionErrors").fadeTo(5000, 500).slideUp(800, function() {
+                $("#codigo").removeClass("is-invalid");
+                $("#descripcion").removeClass("is-invalid");
+                $("#idCliente").removeClass("is-invalid");
+                $("#idDivision").removeClass("is-invalid");
+                $("#idSubcategoria").removeClass("is-invalid");
+                $("#sectionErrors").slideUp(3000);
+            });
+        }
+        closeAlert();
+    });
+
 
     (function() {
         'use strict';

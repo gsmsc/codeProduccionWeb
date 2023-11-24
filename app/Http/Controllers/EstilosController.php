@@ -25,7 +25,7 @@ class EstilosController extends Controller
             ->leftJoin('CAT_division as DIV', 'CEST.idDivision', '=', 'DIV.id')
             ->leftJoin('CAT_subcategoria as CAT', 'CEST.idSubcategoria', '=', 'CAT.id')
             ->get();
-            
+
         return view('estilos.index', compact('estilos', 'clientes', 'subcategoria', 'division'));
     }
 
@@ -33,19 +33,22 @@ class EstilosController extends Controller
     {
         $validacionesInputs = [
             'codigo' => 'required|max:50',
-            'idCliente' => 'nullable',
-            'idDivision' => 'nullable',
-            'idSubcategoria' => 'nullable',
+            'idCliente' => 'required',
+            'idDivision' => 'required',
+            'idSubcategoria' => 'required',
             'referencia1' => 'nullable|max:150',
             'referencia2' => 'nullable|max:150',
-            'descripcion' => 'nullable|max:100',
+            'descripcion' => 'required|max:100',
         ];
 
         $respuestaValidaciones = [
             'codigo.required' => 'El codigo es un valor requerido.',
             'codigo.max' => 'El codigo no debe exceder de 50 caracteres.',
-            'referencia1.required' => 'La referencia #1 no debe exceder de 150 caracteres.',
-            'referencia2.required' => 'La referencia #2 no debe exceder de 150 caracteres.',
+            'idCliente.required' => 'El cliente es un valor requerido.',
+            'idDivision.required' => 'La division es un valor requerido.',
+            'idSubcategoria.required' => 'La subcategoria es un valor requerido.',
+            'referencia1.max' => 'La referencia #1 no debe exceder de 150 caracteres.',
+            'referencia2.max' => 'La referencia #2 no debe exceder de 150 caracteres.',
             'descripcion.required' => 'La descripción es un valor requerido.',
             'descripcion.max' => 'La descripción no debe exceder de 100 caracteres.'
         ];
@@ -82,18 +85,20 @@ class EstilosController extends Controller
     {
         $validacionesInputs = [
             'codigo' => 'nullable',
-            'idCliente' => 'nullable',
-            'idDivision' => 'nullable',
-            'idSubcategoria' => 'nullable',
+            'idCliente' => 'required',
+            'idDivision' => 'required',
+            'idSubcategoria' => 'required',
             'referencia1' => 'nullable|max:150',
             'referencia2' => 'nullable|max:150',
-            'descripcion' => 'nullable|max:100'
+            'descripcion' => 'required|max:100'
         ];
 
         $respuestaValidaciones = [
-            'codigo.max' => 'El codigo no debe exceder de 50 caracteres.',
-            'referencia1.required' => 'La referencia #1 no debe exceder de 150 caracteres.',
-            'referencia2.required' => 'La referencia #2 no debe exceder de 150 caracteres.',
+            'idCliente.required' => 'El cliente es un valor requerido.',
+            'idDivision.required' => 'La division es un valor requerido.',
+            'idSubcategoria.required' => 'La subcategoria es un valor requerido.',
+            'referencia1.max' => 'La referencia #1 no debe exceder de 150 caracteres.',
+            'referencia2.max' => 'La referencia #2 no debe exceder de 150 caracteres.',
             'descripcion.required' => 'La descripción es un valor requerido.',
             'descripcion.max' => 'La descripción no debe exceder de 100 caracteres.'
         ];
