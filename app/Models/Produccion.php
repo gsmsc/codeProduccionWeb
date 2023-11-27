@@ -10,6 +10,7 @@ class Produccion extends Model
 
     protected $fillable = [
         'id',
+        'idUsuario',
         'fecha',
         'idLinea',
         'idEstilo',

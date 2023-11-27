@@ -123,9 +123,13 @@ class EstilosController extends Controller
 
     public function destroy($id)
     {
-        $estilos = Estilos::find($id);
-        $estilos->delete();
-
+        $registros = DB::table('tblProduccion')->where('idEstilo', '=', $id)->count();
+        if ($registros == 0) {
+            $estilos = Estilos::find($id);
+            $estilos->delete();
+        } else {
+            return redirect()->route('estilos.index')->with('info', 'Este estilo está siendo usada por uno o más registros de producción, imposible eliminar.');;
+        }
         return redirect()->route('estilos.index')->with('info', 'Estilo eliminado con éxito');
     }
 }

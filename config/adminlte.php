@@ -307,12 +307,12 @@ return [
             'icon'        => 'fas fa-border-style',
             'can'        => ['Estilos.Index']
         ],
-        // [
-        //     'text'        => 'Producción',
-        //     'url'         => '/produccion/index',
-        //     'icon'        => 'fas fa-cash-register',
-        //     'can'        => ['Produccion.Index']
-        // ],
+        [
+            'text'        => 'Producción',
+            'url'         => '/produccion/index',
+            'icon'        => 'fas fa-cash-register',
+            'can'        => ['Produccion.Index']
+        ],
         [
             'header' => 'ADMINISTRACIÓN',
             'can' => ['Usuarios.Index', 'Roles.Index']

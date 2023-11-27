@@ -60,5 +60,8 @@ Route::middleware([
         Route::get('/produccion/index', 'index')->name('produccion.index');
         Route::get('/produccion/create', 'create')->name('produccion.create');
         Route::post('/produccion/store', 'store')->name('produccion.store');
+        Route::get('/produccion/edit/{id}', 'edit')->name('produccion.edit');
+        Route::put('/produccion/update/{id}', 'update')->name('produccion.update');
+        Route::delete('/produccion/destroy/{id}', 'destroy')->name('produccion.destroy');
     });
 });

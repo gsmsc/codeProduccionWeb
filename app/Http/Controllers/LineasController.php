@@ -74,9 +74,13 @@ class LineasController extends Controller
 
     public function destroy($id)
     {
-        $linea = Lineas::find($id);
-        $linea->delete();
-
+        $registros = DB::table('tblProduccion')->where('idLinea', '=', $id)->count();
+        if ($registros == 0) {
+            $linea = Lineas::find($id);
+            $linea->delete();
+        } else {
+            return redirect()->route('lineas.index')->with('info', 'Esta línea está siendo usada por uno o más registros de producción, imposible eliminar.');;
+        }
         return redirect()->route('lineas.index')->with('info', 'Línea eliminada con éxito');
     }
 }
