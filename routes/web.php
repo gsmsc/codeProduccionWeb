@@ -63,5 +63,8 @@ Route::middleware([
         Route::get('/produccion/edit/{id}', 'edit')->name('produccion.edit');
         Route::put('/produccion/update/{id}', 'update')->name('produccion.update');
         Route::delete('/produccion/destroy/{id}', 'destroy')->name('produccion.destroy');
+        Route::get('/produccion/listProductionUsers', 'listProductionUsers')->name('produccion.listProductionUsers');
+        Route::get('/produccion/getProductionUsers/{id}', 'getProductionUsers')->name('produccion.getProductionUsers');
+        Route::get('/produccion/xlsxPorSupervisor/{idUsuario}', 'xlsxPorSupervisor')->name('produccion.xlsxPorSupervisor');
     });
 });

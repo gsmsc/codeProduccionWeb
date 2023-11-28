@@ -308,10 +308,16 @@ return [
             'can'        => ['Estilos.Index']
         ],
         [
-            'text'        => 'Producción',
+            'text'        => 'Registrar producción',
             'url'         => '/produccion/index',
             'icon'        => 'fas fa-cash-register',
             'can'        => ['Produccion.Index']
+        ],
+        [
+            'text'        => 'Producción por superv.',
+            'url'         => '/produccion/listProductionUsers',
+            'icon'        => 'fas fa-people-arrows',
+            'can'        => ['SuperAdmin.ListadoSupervisores']
         ],
         [
             'header' => 'ADMINISTRACIÓN',
