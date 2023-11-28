@@ -256,8 +256,8 @@ class ProduccionController extends Controller
             ->get();
 
         $usuario = User::find($idUsuario);
-
-        return view('produccion.getProductionUsers', compact('dataSupervisor', 'usuario'));
+        
+        return view('produccion.getProductionUsers', compact('dataSupervisor', 'usuario', 'idUsuario'));
     }
 
     public function xlsxPorSupervisor($idUsuario)
