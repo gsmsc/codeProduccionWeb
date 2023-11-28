@@ -309,9 +309,6 @@ class ProduccionController extends Controller
         $tituloReporte = "WELLS APPAREL Nicaragua, S.A.";
         $subtituloFecha = "Fecha y hora de exportación: " . $hora;
 
-        header("Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        header('Content-Disposition: attachment; filename="' . $fileName . '"');
-
         $styleArrayHead = [
             'font' => [
                 'bold' => true,
@@ -448,6 +445,11 @@ class ProduccionController extends Controller
         $tableStyle->setShowFirstColumn(true);
         $table->setStyle($tableStyle);
         $spreadsheet->getActiveSheet()->addTable($table);
+
+        
+        header("Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
 
         $writer = new XLsx($spreadsheet);
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
