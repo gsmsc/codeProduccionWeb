@@ -17,7 +17,7 @@
         <div class="row">
             <div class="col-sm-6">
                 <div class="container-title">
-                    <h3>Actividad de <strong style="color: #4A5861;">{{ $dataSupervisor[0]->name}}</strong></h3>
+                    <h3>Actividad de <strong style="color: #4A5861;">{{ $usuario->name}}</strong></h3>
                 </div>
             </div>
             <div class="col-sm-6">

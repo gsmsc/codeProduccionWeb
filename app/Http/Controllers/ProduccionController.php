@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Estilos;
 use App\Models\Lineas;
 use App\Models\Produccion;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -254,7 +255,9 @@ class ProduccionController extends Controller
             ->where('PROD.idUsuario', '=', $idUsuario)
             ->get();
 
-        return view('produccion.getProductionUsers', compact('dataSupervisor'));
+        $usuario = User::find($idUsuario);
+
+        return view('produccion.getProductionUsers', compact('dataSupervisor', 'usuario'));
     }
 
     public function xlsxPorSupervisor($idUsuario)
