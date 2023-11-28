@@ -340,7 +340,7 @@ class ProduccionController extends Controller
         $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
         $drawing->setName('LogoRB');
         $drawing->setDescription('LogoWELLS');
-        $drawing->setPath('assets/LogoWELLS.jpg');
+        $drawing->setPath('assets/logoWELLS.jpg');
         $drawing->setCoordinates('A' . $row);
         $drawing->setWidthAndHeight(128, 101);
         $drawing->setOffsetX(65);
