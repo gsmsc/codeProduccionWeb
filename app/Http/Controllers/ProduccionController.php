@@ -301,10 +301,11 @@ class ProduccionController extends Controller
             ->leftJoin('CAT_estilos as EST', 'PROD.idEstilo', '=', 'EST.id')
             ->where('PROD.idUsuario', '=', $idUsuario)
             ->get();
+        $usuario = User::find($idUsuario);
 
         $row = 1;
         $hora = Carbon::now()->format('d-m-Y - H:i:s A');
-        $fileName = "Reporte de producción de " . $data[0]->name . " $hora.xlsx";
+        $fileName = "Reporte de producción de " . $usuario->name . " $hora.xlsx";
         $tituloReporte = "WELLS APPAREL Nicaragua, S.A.";
         $subtituloFecha = "Fecha y hora de exportación: " . $hora;
 
