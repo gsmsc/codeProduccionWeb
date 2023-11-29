@@ -61,10 +61,10 @@
                                 @foreach($estilos as $items)
                                 <tr>
                                     <td>{{ $items->id }}</td>
-                                    <td>{{ $items->codigo }}</td>
-                                    <td>{{ $items->nombreCliente }}</td>
-                                    <td>{{ $items->nombreDivision }}</td>
-                                    <td>{{ $items->nombreSubcategoria }}</td>
+                                    <td>{{ empty($items->codigo) ? 'NO DEFINIDO' :  $items->codigo}}</td>
+                                    <td>{{ empty($items->nombreCliente) ? 'NO DEFINIDO' : $items->nombreCliente}}</td>
+                                    <td>{{ empty($items->nombreDivision) ? 'NO DEFINIDO' : $items->nombreDivision}}</td>
+                                    <td>{{ empty($items->nombreSubcategoria) ? 'NO DEFINIDO' : $items->nombreSubcategoria}}</td>
                                     <td class="text-center">
                                         <form action="{{ route('estilos.destroy', $items->id) }}" method="POST" class="formEliminarEstilo">
                                             @method('DELETE')

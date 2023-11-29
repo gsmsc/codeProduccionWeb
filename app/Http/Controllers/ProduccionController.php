@@ -14,6 +14,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Table;
 use PhpOffice\PhpSpreadsheet\Worksheet\Table\TableStyle;
 use Illuminate\Support\Facades\DB;
+use TCPDF;
 
 class ProduccionController extends Controller
 {
@@ -256,7 +257,6 @@ class ProduccionController extends Controller
             ->get();
 
         $usuario = User::find($idUsuario);
-        
         return view('produccion.getProductionUsers', compact('dataSupervisor', 'usuario', 'idUsuario'));
     }
 
@@ -446,7 +446,6 @@ class ProduccionController extends Controller
         $table->setStyle($tableStyle);
         $spreadsheet->getActiveSheet()->addTable($table);
 
-        
         header("Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         header('Content-Disposition: attachment; filename="' . $fileName . '"');
 
@@ -454,5 +453,199 @@ class ProduccionController extends Controller
         $writer = new XLsx($spreadsheet);
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save("php://output");
+    }
+
+    public function pdfProduccion($idProduccion)
+    {
+        $pdf = new MYPDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $hora = Carbon::now()->format('d-m-Y - H:i:s A');
+        $registro = DB::table('tblProduccion as PROD')
+            ->select(
+                'PROD.id',
+                'PROD.idUsuario',
+                'USR.name',
+                'PROD.fecha',
+                'EST.codigo',
+                'EST.descripcion as descripcionEstilo',
+                'LIN.descripcion as descripcionLinea',
+                'PROD.operariosNormal',
+                'PROD.operariosRefuerzos',
+                'PROD.uProducidas',
+                'PROD.uIrregulares',
+                'PROD.uRegulares',
+                'PROD.metaNormal',
+                'PROD.totalHorasOrdinarias',
+                'PROD.totalHorasExtras',
+                'PROD.totalHorasTrabajadas',
+                'PROD.horasNoProducidas',
+                'PROD.horasProducidas',
+                'PROD.metaAjustada',
+                'PROD.eficiencia',
+                'PROD.bonos',
+                'PROD.maquinaMala',
+                'PROD.noTrabajo',
+                'PROD.entrenamiento',
+                'PROD.cambioEstilo',
+                'PROD.observaciones'
+            )
+            ->leftJoin('users as USR', 'PROD.idUsuario', '=', 'USR.id')
+            ->leftJoin('CAT_lineas as LIN', 'PROD.idLinea', '=', 'LIN.id')
+            ->leftJoin('CAT_estilos as EST', 'PROD.idEstilo', '=', 'EST.id')
+            ->where('PROD.id', '=', $idProduccion)
+            ->get();
+
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor('WELLS APPAREL Nicaragua S.A.');
+        $pdf->SetTitle('Produccion #' . $idProduccion . '  ' . $hora);
+
+        $pdf->setHeaderFont(array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
+        $pdf->setFooterFont(array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+        $pdf->SetHeaderMargin(false);
+
+        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+        $pdf->SetFont('helvetica', '', 210);
+
+        $pdf->AddPage();
+        $logo1 = $pdf->Image('assets/LogoWELLS.jpg', 11, 11, 50, 20, 'JPG', '', 'C', false, 300, '', false, false, 1, false, false, false);
+        $pdf->headerPDF($logo1);
+
+        $pdf->Output('Produccion #' . $idProduccion . ' - ' . $hora . '.pdf', 'I');
+    }
+}
+
+class MYPDF extends TCPDF
+{
+    public function headerPDF($logo1)
+    {
+        if (!empty($logo1)) {
+            $img = file_get_contents(public_path($logo1));
+            $this->Image($img, 0, $this->GetY(), 0, 0,  'PNG', null,  '',  false,  300,  'C',  false, false, 2);
+            $this->SetY(22);
+        }
+
+        $this->setX(45);
+        $this->SetFont('Helvetica', '', 7.5);
+        $celdas = $this->MultiCell(120, 0, '', 0, 'C', 0, 0);
+
+        $y = $this->getY();
+        $this->setY($y + (4 * $celdas));
+    }
+
+    public function LoadData($datos)
+    {
+        $lines = $datos;
+        $data = array();
+        foreach ($lines as $line) {
+            $data[] = $line;
+        }
+        return $data;
+    }
+
+    public function section1($datosSolicitud)
+    {
+        $this->SetFont('times', 'B');
+        $this->SetFillColor(255, 255, 255);
+        $this->SetTextColor(0, 0, 0);
+        $this->Ln(7);
+        $this->SetFont('times', '', 12, 'B', true);
+        $this->Cell(230, 6, 'DEPARTAMENTO:  ' . $datosSolicitud[0]->descripcionDepartamento, 0, 0, 'L', 1, '', 0);
+        $this->Cell(35, 6, 'REQUISICIÓN', 1, 0, 'C', 0, '', 0);
+        $this->Ln(6);
+        $this->Cell(230, 6, 'SECRETARÍA:  ' . $datosSolicitud[0]->descripcionSecretaria, 0, 0, 'L', 0, '', 0);
+        $this->SetTextColor(199, 3, 31);
+        $this->Cell(35, 6, "N°. " . $datosSolicitud[0]->NumRequisicion, 0, 0, 'C', 0, '', 0);
+        $this->SetTextColor(0, 0, 0);
+        $this->Ln(6);
+        $this->Cell(230, 6, 'REGISTRÓ:  ' . strtoupper($datosSolicitud[0]->nombreCapturo), 0, 0, 'L', 0, '', 0);
+        $this->Cell(11.6, 6, 'DÍA', 1, 0, 'C', 0, '', 0);
+        $this->Cell(11.6, 6, 'MES', 1, 0, 'C', 0, '', 0);
+        $this->Cell(11.6, 6, 'AÑO', 1, 0, 'C', 0, '', 0);
+        $this->Ln(6);
+        $this->Cell(230, 6, 'AUTORIZÓ:  ', 0, 0, 'L', 0, '', 0);
+        $this->Cell(11.6, 6, date("d", strtotime($datosSolicitud[0]->fecha)), 1, 0, 'C', 0, '', 0);
+        $this->Cell(11.6, 6, date("m", strtotime($datosSolicitud[0]->fecha)), 1, 0, 'C', 0, '', 0);
+        $this->Cell(11.6, 6, date("y", strtotime($datosSolicitud[0]->fecha)), 1, 0, 'C', 0, '', 0);
+        $this->Ln(6);
+        $this->Cell(265, 6, 'PROYECTO:  ', 0, 0, 'L', 0, '', 0);
+        $this->Ln(4);
+    }
+
+    public function section2($datosArticulosSolicitud, $headerTable, $datosSolicitud)
+    {
+        $this->SetFillColor(187, 147, 136);
+        $this->SetTextColor(0, 0, 0);
+        $this->SetDrawColor(0, 0, 0);
+        $this->SetLineWidth(0.3);
+        $this->SetFont('times', '', 11, '', true);
+        $this->Ln(7);
+        $w = array(25, 25, 50, 165);
+        $num_headers = count($headerTable);
+        for ($i = 0; $i < $num_headers; ++$i) {
+            $this->Cell($w[$i], 7, $headerTable[$i], 1, 0, 'C', 1);
+        }
+
+        $this->SetFillColor(237, 237, 237);
+        $this->SetTextColor(0);
+        $this->SetFont('times', '', 10, '', true);
+        $this->Ln();
+
+        foreach ($datosArticulosSolicitud as $con) {
+            $html = '<table border="1" cellspacing="0" cellpadding="1">
+                <tr >
+                    <td style="width:9.35%!important;" align="center">' . '' . '</td>
+                    <td style="width:9.37%!important;" align="center">' . $con->cantidad . '</td>
+                    <td style="width:18.73%!important;" align="center">' . '  ' . $con->descripcionUnidad . ' ' . '</td>
+                    <td style="width:61.80%!important;" align="center">' . ' ' . $con->articulo . ' ' . '</td>
+                </tr>
+            </table>';
+            $this->writeHTML($html, false, false, true, false, '');
+        }
+        $this->Cell(array_sum($w), 0, '', 'T');
+
+        $complex_cell_border = array(
+            'T' => array('width' => 0.5, 'color' => array(106, 91, 84), false, 'cap' => 'round'),
+            'R' => array('width' => 0.5, 'color' => array(106, 91, 84), false, 'cap' => 'round'),
+            'B' => array('width' => 0.5, 'color' => array(106, 91, 84), false, 'cap' => 'round'),
+            'L' => array('width' => 0.5, 'color' => array(106, 91, 84), false, 'cap' => 'round'),
+        );
+
+        $this->Ln(1.5);
+        $this->SetTextColor(0, 0, 0);
+        $this->Cell(265, 13, ' JUSTIFIQUE SU COMPRA:  ' . $datosSolicitud[0]->justificacion, $complex_cell_border, 0, 'L', 0, '', 0);
+        $this->Ln(14.5);
+        $this->Cell(265, 13, ' OBSERVACIONES:  ' . $datosSolicitud[0]->observaciones, $complex_cell_border, 0, 'L', 0, '', 0);
+    }
+
+    public function ColoredTableSolicitante($headerDataSolictante, $data)
+    {
+        $this->SetFillColor(173, 170, 162);
+        $this->SetTextColor(0, 0, 0);
+        $this->SetDrawColor(0, 0, 0);
+        $this->SetLineWidth(0.3);
+        $this->SetFont('times', '', 9, 'B');
+
+        $w = array(30, 45, 105);
+        $num_headers = count($headerDataSolictante);
+        for ($i = 0; $i < $num_headers; ++$i) {
+            $this->Cell($w[$i], 7, $headerDataSolictante[$i], 1, 0, 'L', 1);
+        }
+        $this->Ln();
+        $this->SetFillColor(237, 237, 237);
+        $this->SetTextColor(0);
+        $this->SetFont('times', '', 9, '', true);
+
+        $this->Cell(180, 6, ' Secretaría: ' . $data[0]->descripcionSecretaria, 1, 0, 'L', 0, '', 0);
+        $this->Ln();
+        $this->Cell(180, 6, ' Departamento: ' . $data[0]->descripcionDepto, 1, 1, 'L', 0, '', 0);
+        $this->Cell(180, 6, ' Empleado: ' . $data[0]->nombreSolicitante, 1, 1, 'L', 0, '', 0);
+        $this->Cell(180, 6, ' Fecha solicitud: ' . date("d-m-Y", strtotime($data[0]->fechaSolicitud)), 1, 1, 'L', 0, '', 0);
+        $this->Ln();
     }
 }

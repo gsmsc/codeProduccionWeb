@@ -66,5 +66,6 @@ Route::middleware([
         Route::get('/produccion/listProductionUsers', 'listProductionUsers')->name('produccion.listProductionUsers');
         Route::get('/produccion/getProductionUsers/{id}', 'getProductionUsers')->name('produccion.getProductionUsers');
         Route::get('/produccion/xlsxPorSupervisor/{idUsuario}', 'xlsxPorSupervisor')->name('produccion.xlsxPorSupervisor');
+        Route::get('/produccion/pdfProduccion/{idProduccion}', 'pdfProduccion')->name('produccion.pdfProduccion');
     });
 });

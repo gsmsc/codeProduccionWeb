@@ -61,7 +61,7 @@
                                             <select class="custom-select @error('idEstilo') is-invalid @enderror" name="idEstilo" id="idEstilo" required>
                                                 <option selected value="">...</option>
                                                 @foreach($estilos as $item)
-                                                <option value="{{ $item->id }}" {{ old('idEstilo') == $item->id ? 'selected' : '' }}>{{ $item->codigo }}</option>
+                                                <option value="{{ $item->id }}" {{ old('idEstilo') == $item->id ? 'selected' : '' }}>{{ $item->descripcion }}-{{ $item->codigo }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
