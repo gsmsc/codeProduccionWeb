@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Producción por supervisor')
+@section('title', 'Listado de supervisores')
 
 @section('content')
 <!DOCTYPE html>

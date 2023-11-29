@@ -314,7 +314,7 @@ return [
             'can'        => ['Produccion.Index']
         ],
         [
-            'text'        => 'Producción por superv.',
+            'text'        => 'Listado de supervisores',
             'url'         => '/produccion/listProductionUsers',
             'icon'        => 'fas fa-people-arrows',
             'can'        => ['SuperAdmin.ListadoSupervisores']
