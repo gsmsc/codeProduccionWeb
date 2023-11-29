@@ -262,7 +262,7 @@ class ProduccionController extends Controller
 
     public function xlsxPorSupervisor($idUsuario)
     {
-        $registros = Produccion::all();
+        $registros = Produccion::all()->where('idUsuario', '=', $idUsuario);
         if ($registros->isEmpty()) {
             return redirect()->back()->with('info', 'No existen datos que exportar.');
         }
@@ -340,7 +340,7 @@ class ProduccionController extends Controller
         $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
         $drawing->setName('LogoRB');
         $drawing->setDescription('LogoWELLS');
-        $drawing->setPath('assets/logoWELLS.jpg');
+        $drawing->setPath('assets/LogoWELLS.jpeg');
         $drawing->setCoordinates('A' . $row);
         $drawing->setWidthAndHeight(128, 101);
         $drawing->setOffsetX(65);
@@ -459,6 +459,7 @@ class ProduccionController extends Controller
     {
         $pdf = new MYPDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
         $hora = Carbon::now()->format('d-m-Y - H:i:s A');
+        $pdf->setPrintHeader(false);
         $registro = DB::table('tblProduccion as PROD')
             ->select(
                 'PROD.id',
@@ -501,7 +502,7 @@ class ProduccionController extends Controller
         $pdf->setHeaderFont(array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
         $pdf->setFooterFont(array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
 
-        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+        $pdf->SetMargins(PDF_MARGIN_LEFT, false, PDF_MARGIN_RIGHT);
         $pdf->SetHeaderMargin(false);
 
         $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
@@ -513,8 +514,10 @@ class ProduccionController extends Controller
         $pdf->SetFont('helvetica', '', 210);
 
         $pdf->AddPage();
-        $logo1 = $pdf->Image('assets/LogoWELLS.jpg', 11, 11, 50, 20, 'JPG', '', 'C', false, 300, '', false, false, 1, false, false, false);
+        $logo1 = $pdf->Image('assets/LogoWELLS.jpeg', 14.8, 11, 50, 25, 'JPEG', '', 'C', false, 300, '', false, false, 1, false, false, false);
         $pdf->headerPDF($logo1);
+        $dataProduccion = $pdf->LoadData($registro);
+        $pdf->section1($dataProduccion);
 
         $pdf->Output('Produccion #' . $idProduccion . ' - ' . $hora . '.pdf', 'I');
     }
@@ -526,9 +529,19 @@ class MYPDF extends TCPDF
     {
         if (!empty($logo1)) {
             $img = file_get_contents(public_path($logo1));
-            $this->Image($img, 0, $this->GetY(), 0, 0,  'PNG', null,  '',  false,  300,  'C',  false, false, 2);
+            $this->Image($img, 0, $this->GetY(), 0, 0,  'JPEG', null,  '',  false,  300,  'C',  false, false, 1);
             $this->SetY(22);
         }
+        $this->Ln(13);
+        $this->SetTextColor(27, 27, 27);
+        $this->SetFont('Helvetica', 'B', 22);
+        $this->Cell(50, 8, '', 0, 0, 'C', 0, '', 0);
+        $this->Cell(130, 8, 'Wells Apparel Nicaragua, S.A.', 0, 0, 'C', 0, '', 0);
+        $this->Ln(10);
+        $this->SetTextColor(105, 105, 105);
+        $this->SetFont('Helvetica', '', 14);
+        $this->Cell(50, 8, '', 0, 0, 'C', 0, '', 0);
+        $this->Cell(130, 8, 'Reporte de producción diaria (Base de datos)', 0, 0, 'C', 0, '', 0);
 
         $this->setX(45);
         $this->SetFont('Helvetica', '', 7.5);
@@ -548,104 +561,94 @@ class MYPDF extends TCPDF
         return $data;
     }
 
-    public function section1($datosSolicitud)
+    public function section1($dataProduccion)
     {
+        $this->Ln(13);
         $this->SetFont('times', 'B');
         $this->SetFillColor(255, 255, 255);
         $this->SetTextColor(0, 0, 0);
-        $this->Ln(7);
         $this->SetFont('times', '', 12, 'B', true);
-        $this->Cell(230, 6, 'DEPARTAMENTO:  ' . $datosSolicitud[0]->descripcionDepartamento, 0, 0, 'L', 1, '', 0);
-        $this->Cell(35, 6, 'REQUISICIÓN', 1, 0, 'C', 0, '', 0);
-        $this->Ln(6);
-        $this->Cell(230, 6, 'SECRETARÍA:  ' . $datosSolicitud[0]->descripcionSecretaria, 0, 0, 'L', 0, '', 0);
-        $this->SetTextColor(199, 3, 31);
-        $this->Cell(35, 6, "N°. " . $datosSolicitud[0]->NumRequisicion, 0, 0, 'C', 0, '', 0);
-        $this->SetTextColor(0, 0, 0);
-        $this->Ln(6);
-        $this->Cell(230, 6, 'REGISTRÓ:  ' . strtoupper($datosSolicitud[0]->nombreCapturo), 0, 0, 'L', 0, '', 0);
-        $this->Cell(11.6, 6, 'DÍA', 1, 0, 'C', 0, '', 0);
-        $this->Cell(11.6, 6, 'MES', 1, 0, 'C', 0, '', 0);
-        $this->Cell(11.6, 6, 'AÑO', 1, 0, 'C', 0, '', 0);
-        $this->Ln(6);
-        $this->Cell(230, 6, 'AUTORIZÓ:  ', 0, 0, 'L', 0, '', 0);
-        $this->Cell(11.6, 6, date("d", strtotime($datosSolicitud[0]->fecha)), 1, 0, 'C', 0, '', 0);
-        $this->Cell(11.6, 6, date("m", strtotime($datosSolicitud[0]->fecha)), 1, 0, 'C', 0, '', 0);
-        $this->Cell(11.6, 6, date("y", strtotime($datosSolicitud[0]->fecha)), 1, 0, 'C', 0, '', 0);
-        $this->Ln(6);
-        $this->Cell(265, 6, 'PROYECTO:  ', 0, 0, 'L', 0, '', 0);
-        $this->Ln(4);
-    }
+        $this->Cell(75, 8, 'FECHA ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8,  date("d/m/Y", strtotime($dataProduccion[0]->fecha)), 1, 0, 'C', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'LÍNEA/DEPARTAMENTO ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->descripcionLinea, 1, 0, 'C', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'ESTILO ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(90, 8, $dataProduccion[0]->descripcionEstilo, 1, 0, 'C', 1, '', 0);
+        $this->Cell(15, 8, '', 1, 0, 'C', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'OPERARIOS ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(35, 8, 'NORMAL: ' . $dataProduccion[0]->operariosNormal, 1, 0, 'L', 1, '', 0);
+        $this->Cell(70, 8, 'REFUERZOS: ' . $dataProduccion[0]->operariosRefuerzos, 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'UNIDADES PRODUCIDAS ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->uProducidas, 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'MENOS: UNIDADES IRREGULARES ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->uIrregulares, 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'UNIDADES REGULARES ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->uRegulares, 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'META NORMAL ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(90, 8, $dataProduccion[0]->metaNormal, 1, 0, 'L', 1, '', 0);
+        $this->Cell(15, 8, '', 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'TOTAL HORAS ORDINARIAS ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->totalHorasOrdinarias, 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'TOTAL HORAS EXTRAS ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->totalHorasExtras, 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'TOTAL HORAS TRABAJADAS ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->totalHorasTrabajadas, 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'MENOS: HORAS NO PRODUCIDAS ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->horasNoProducidas, 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'TOTAL HORAS PRODUCIDAS ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->horasProducidas, 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'META AJUSTADA ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(90, 8, $dataProduccion[0]->metaAjustada, 1, 0, 'L', 1, '', 0);
+        $this->Cell(15, 8, '', 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'EFICIENCIA ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->eficiencia . '%', 1, 0, 'L', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'BONOS ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(105, 8, $dataProduccion[0]->bonos, 1, 0, 'L', 1, '', 0);
+        $this->Ln(10);
+        $this->Cell(180, 8, 'HORAS NO PRODUCIDAS', 0, 0, 'C', 1, '', 0);
+        $this->Ln(10);
+        $this->Cell(75, 8, 'MAQUINA MALA ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(90, 8, $dataProduccion[0]->maquinaMala, 1, 0, 'L', 1, '', 0);
+        $this->Cell(15, 8, 'HORA', 1, 0, 'C', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'NO TRABAJO ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(90, 8, $dataProduccion[0]->noTrabajo, 1, 0, 'L', 1, '', 0);
+        $this->Cell(15, 8, 'HORA', 1, 0, 'C', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'ENTRENAMIENTO ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(90, 8, $dataProduccion[0]->entrenamiento, 1, 0, 'L', 1, '', 0);
+        $this->Cell(15, 8, 'HORA', 1, 0, 'C', 1, '', 0);
+        $this->Ln(8);
+        $this->Cell(75, 8, 'CAMBIO DE ESTILO ', 1, 0, 'R', 1, '', 0);
+        $this->Cell(90, 8, $dataProduccion[0]->cambioEstilo, 1, 0, 'L', 1, '', 0);
+        $this->Cell(15, 8, 'HORA', 1, 0, 'C', 1, '', 0);
+        $this->Ln(10);
+        $this->Cell(180, 8, 'OBSERVACIONES', 0, 0, 'C', 1, '', 0);
+        $this->Ln(10);
+        $this->MultiCell(180, 20, ' ' . strtoupper($dataProduccion[0]->observaciones), 1, '', 0, 1, '', '', true);
+        $this->Ln(20);
 
-    public function section2($datosArticulosSolicitud, $headerTable, $datosSolicitud)
-    {
-        $this->SetFillColor(187, 147, 136);
-        $this->SetTextColor(0, 0, 0);
-        $this->SetDrawColor(0, 0, 0);
-        $this->SetLineWidth(0.3);
-        $this->SetFont('times', '', 11, '', true);
-        $this->Ln(7);
-        $w = array(25, 25, 50, 165);
-        $num_headers = count($headerTable);
-        for ($i = 0; $i < $num_headers; ++$i) {
-            $this->Cell($w[$i], 7, $headerTable[$i], 1, 0, 'C', 1);
-        }
+        $centerX = $this->GetX();
+        $centerY = $this->GetY();
 
-        $this->SetFillColor(237, 237, 237);
-        $this->SetTextColor(0);
-        $this->SetFont('times', '', 10, '', true);
-        $this->Ln();
-
-        foreach ($datosArticulosSolicitud as $con) {
-            $html = '<table border="1" cellspacing="0" cellpadding="1">
-                <tr >
-                    <td style="width:9.35%!important;" align="center">' . '' . '</td>
-                    <td style="width:9.37%!important;" align="center">' . $con->cantidad . '</td>
-                    <td style="width:18.73%!important;" align="center">' . '  ' . $con->descripcionUnidad . ' ' . '</td>
-                    <td style="width:61.80%!important;" align="center">' . ' ' . $con->articulo . ' ' . '</td>
-                </tr>
-            </table>';
-            $this->writeHTML($html, false, false, true, false, '');
-        }
-        $this->Cell(array_sum($w), 0, '', 'T');
-
-        $complex_cell_border = array(
-            'T' => array('width' => 0.5, 'color' => array(106, 91, 84), false, 'cap' => 'round'),
-            'R' => array('width' => 0.5, 'color' => array(106, 91, 84), false, 'cap' => 'round'),
-            'B' => array('width' => 0.5, 'color' => array(106, 91, 84), false, 'cap' => 'round'),
-            'L' => array('width' => 0.5, 'color' => array(106, 91, 84), false, 'cap' => 'round'),
-        );
-
-        $this->Ln(1.5);
-        $this->SetTextColor(0, 0, 0);
-        $this->Cell(265, 13, ' JUSTIFIQUE SU COMPRA:  ' . $datosSolicitud[0]->justificacion, $complex_cell_border, 0, 'L', 0, '', 0);
-        $this->Ln(14.5);
-        $this->Cell(265, 13, ' OBSERVACIONES:  ' . $datosSolicitud[0]->observaciones, $complex_cell_border, 0, 'L', 0, '', 0);
-    }
-
-    public function ColoredTableSolicitante($headerDataSolictante, $data)
-    {
-        $this->SetFillColor(173, 170, 162);
-        $this->SetTextColor(0, 0, 0);
-        $this->SetDrawColor(0, 0, 0);
-        $this->SetLineWidth(0.3);
-        $this->SetFont('times', '', 9, 'B');
-
-        $w = array(30, 45, 105);
-        $num_headers = count($headerDataSolictante);
-        for ($i = 0; $i < $num_headers; ++$i) {
-            $this->Cell($w[$i], 7, $headerDataSolictante[$i], 1, 0, 'L', 1);
-        }
-        $this->Ln();
-        $this->SetFillColor(237, 237, 237);
-        $this->SetTextColor(0);
-        $this->SetFont('times', '', 9, '', true);
-
-        $this->Cell(180, 6, ' Secretaría: ' . $data[0]->descripcionSecretaria, 1, 0, 'L', 0, '', 0);
-        $this->Ln();
-        $this->Cell(180, 6, ' Departamento: ' . $data[0]->descripcionDepto, 1, 1, 'L', 0, '', 0);
-        $this->Cell(180, 6, ' Empleado: ' . $data[0]->nombreSolicitante, 1, 1, 'L', 0, '', 0);
-        $this->Cell(180, 6, ' Fecha solicitud: ' . date("d-m-Y", strtotime($data[0]->fechaSolicitud)), 1, 1, 'L', 0, '', 0);
-        $this->Ln();
+        $lineStartX = $centerX + 60;
+        $lineEndX = $centerX + 120;
+        $this->Cell(180, 8, $dataProduccion[0]->name, 0, 0, 'C', 1, '', 0);
+        $this->Line($lineStartX, $centerY, $lineEndX, $centerY);
     }
 }
