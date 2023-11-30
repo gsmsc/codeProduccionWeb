@@ -60,7 +60,7 @@
                                 @foreach($produccion as $items)
                                 <tr>
                                     <td>{{ $items->id }}</td>
-                                    <td>{{ $items->fecha }}</td>
+                                    <td>{{ date("d-m-Y", strtotime($items->fecha)) }}</td>
                                     <td>{{ strtoupper($items->descripcionLinea) }}</td>
                                     <td>{{ $items->codigo }} - {{ strtoupper($items->descripcionEstilo) }}</td>
                                     <td class="text-center">

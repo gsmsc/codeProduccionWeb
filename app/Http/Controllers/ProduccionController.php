@@ -18,6 +18,15 @@ use TCPDF;
 
 class ProduccionController extends Controller
 {
+    function __construct()
+    {
+        $this->middleware('can:Produccion.Index', ['only' => ['index']]);
+        $this->middleware('can:Produccion.Crear', ['only' => ['create', 'store']]);
+        $this->middleware('can:Produccion.Editar', ['only' => ['edit', 'update']]);
+        $this->middleware('can:Produccion.Eliminar', ['only' => ['destroy']]);
+        $this->middleware('can:Produccion.ReporteExcel', ['only' => ['xlsxPorSupervisor']]);
+        $this->middleware('can:Produccion.ReportePDF', ['only' => ['pdfProduccion']]);
+    }
     public function index()
     {
         $produccion = DB::table('tblProduccion as PRD')
@@ -232,8 +241,14 @@ class ProduccionController extends Controller
 
     public function listProductionUsers(Request $request)
     {
-        $supervisores = DB::table('users')
-            ->select('id', 'name', 'email')
+        $supervisores = DB::table('users as USR')
+            ->select(
+                'USR.id',
+                'USR.name',
+                'USR.email',
+                'RL.name as nombreRol'
+            )
+            ->leftJoin('roles as RL', 'USR.idRol', '=', 'RL.id')
             ->get();
         return view('produccion.listProductionUsers', compact('supervisores'));
     }
@@ -270,10 +285,8 @@ class ProduccionController extends Controller
         $data = DB::table('tblProduccion as PROD')
             ->select(
                 'PROD.id',
-                'PROD.idUsuario',
                 'USR.name',
                 'PROD.fecha',
-                'EST.codigo',
                 'EST.descripcion as descripcionEstilo',
                 'LIN.descripcion as descripcionLinea',
                 'PROD.operariosNormal',
@@ -432,7 +445,7 @@ class ProduccionController extends Controller
             $spreadsheet->getActiveSheet()->setCellValue('S' . $filaRow, empty($item->maquinaMala) ? 'N/A' : $item->maquinaMala)->getStyle('S')->applyFromArray($arrayCentered);
             $spreadsheet->getActiveSheet()->setCellValue('T' . $filaRow, empty($item->noTrabajo) ? 'N/A' : $item->noTrabajo)->getStyle('T')->applyFromArray($arrayCentered);
             $spreadsheet->getActiveSheet()->setCellValue('U' . $filaRow, empty($item->entrenamiento) ? 'N/A' : $item->entrenamiento)->getStyle('U')->applyFromArray($arrayCentered);
-            $spreadsheet->getActiveSheet()->setCellValue('V' . $filaRow, $item->observaciones);
+            $spreadsheet->getActiveSheet()->setCellValue('V' . $filaRow, strtoupper($item->observaciones));
             $filaRow = $filaRow + 1;
         }
 
@@ -520,6 +533,203 @@ class ProduccionController extends Controller
         $pdf->section1($dataProduccion);
 
         $pdf->Output('Produccion #' . $idProduccion . ' - ' . $hora . '.pdf', 'I');
+    }
+
+    public function xlsxPorFecha(Request $request)
+    {
+        if ($request->formato == 'EXCEL') {
+
+            $data = DB::table('tblProduccion as PROD')
+                ->select(
+                    'PROD.id',
+                    'USR.name',
+                    'PROD.fecha',
+                    'EST.descripcion as descripcionEstilo',
+                    'LIN.descripcion as descripcionLinea',
+                    'PROD.operariosNormal',
+                    'PROD.operariosRefuerzos',
+                    'PROD.uProducidas',
+                    'PROD.uIrregulares',
+                    'PROD.uRegulares',
+                    'PROD.metaNormal',
+                    'PROD.totalHorasOrdinarias',
+                    'PROD.totalHorasExtras',
+                    'PROD.totalHorasTrabajadas',
+                    'PROD.horasNoProducidas',
+                    'PROD.horasProducidas',
+                    'PROD.metaAjustada',
+                    'PROD.eficiencia',
+                    'PROD.bonos',
+                    'PROD.maquinaMala',
+                    'PROD.noTrabajo',
+                    'PROD.entrenamiento',
+                    'PROD.cambioEstilo',
+                    'PROD.observaciones'
+
+                )
+                ->leftJoin('users as USR', 'PROD.idUsuario', '=', 'USR.id')
+                ->leftJoin('CAT_lineas as LIN', 'PROD.idLinea', '=', 'LIN.id')
+                ->leftJoin('CAT_estilos as EST', 'PROD.idEstilo', '=', 'EST.id')
+                ->whereBetween('PROD.created_at', [$request->dtInicio, $request->dtFinal])
+                ->where('PROD.idUsuario', '=', $request->idUsuario)
+                ->get();
+
+            if (count($data) == 0) {
+                return redirect()->back()->with('info', 'No existen registros en este rango de fechas');
+            }
+
+            $usuario = User::find($request->idUsuario);
+
+            $row = 1;
+            $hora = Carbon::now()->format('d-m-Y - H:i:s A');
+            $fileName = "Reporte de producción de " . $usuario->name . " $hora.xlsx";
+            $tituloReporte = "WELLS APPAREL Nicaragua, S.A.";
+            $subtituloFecha = "Reporte de producción del " . date("d-m-Y", strtotime($request->dtInicio)) . ' al ' . date("d-m-Y", strtotime($request->dtFinal)) . ' del supervisor ' . $usuario->name;
+
+            $styleArrayHead = [
+                'font' => [
+                    'bold' => true,
+                    'size'  => 22,
+                    'name'  => 'Arial',
+                    'color' => array('rgb' => '023554'),
+                ]
+            ];
+
+            $styleArrayTitle = [
+                'font' => [
+                    'bold' => true,
+                    'size'  => 20,
+                    'name'  => 'Arial'
+                ]
+            ];
+
+            $arrayCentered = [
+                'alignment' => [
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                ]
+            ];
+
+            $spreadsheet = new Spreadsheet();
+            $spreadsheet->getProperties()->setTitle("Reporte");
+            $spreadsheet->getActiveSheet()->setTitle('Listado');
+
+            $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+            $drawing->setName('LogoRB');
+            $drawing->setDescription('LogoWELLS');
+            $drawing->setPath('assets/LogoWELLS.jpeg');
+            $drawing->setCoordinates('A' . $row);
+            $drawing->setWidthAndHeight(128, 101);
+            $drawing->setOffsetX(65);
+            $drawing->setOffsetY(22);
+            $drawing->getShadow()->setVisible(true);
+            $drawing->getShadow()->setDirection(45);
+            $drawing->setWorksheet($spreadsheet->getActiveSheet());
+
+            $spreadsheet->getActiveSheet()->mergeCells('D2:U2');
+            $spreadsheet->getActiveSheet()->mergeCells('D3:U3');
+
+            $spreadsheet->getActiveSheet()->getStyle('D2:U2')->getAlignment()->setHorizontal('center');
+            $spreadsheet->getActiveSheet()->getStyle('D2:U2')->getAlignment()->setVertical('center');
+            $spreadsheet->getActiveSheet()->getStyle('D3:U3')->getAlignment()->setHorizontal('center');
+            $spreadsheet->getActiveSheet()->getStyle('D3:U3')->getAlignment()->setVertical('center');
+
+            $spreadsheet->getActiveSheet()->getStyle('D2:U2')->applyFromArray($styleArrayHead);
+            $spreadsheet->getActiveSheet()->getStyle('D3:U3')->applyFromArray($styleArrayTitle);
+
+            $spreadsheet->getActiveSheet()->setCellValue('D2', $tituloReporte);
+            $spreadsheet->getActiveSheet()->setCellValue('D3', $subtituloFecha);
+
+            $spreadsheet->getActiveSheet()->setCellValue('B5', 'Fecha');
+            $spreadsheet->getActiveSheet()->setCellValue('C5', 'Línea');
+            $spreadsheet->getActiveSheet()->setCellValue('D5', 'Estilo');
+            $spreadsheet->getActiveSheet()->setCellValue('E5', 'Operario normal');
+            $spreadsheet->getActiveSheet()->setCellValue('F5', 'Operario refuerzo');
+            $spreadsheet->getActiveSheet()->setCellValue('G5', 'U. Producidas');
+            $spreadsheet->getActiveSheet()->setCellValue('H5', 'U. Irregulares');
+            $spreadsheet->getActiveSheet()->setCellValue('I5', 'Meta normal');
+            $spreadsheet->getActiveSheet()->setCellValue('J5', 'Total hrs. ordinarias');
+            $spreadsheet->getActiveSheet()->setCellValue('K5', 'Total hrs. extras');
+            $spreadsheet->getActiveSheet()->setCellValue('L5', 'Total hrs. trabajadas');
+            $spreadsheet->getActiveSheet()->setCellValue('M5', 'Hrs. no producidas');
+            $spreadsheet->getActiveSheet()->setCellValue('N5', 'Hrs. producidas');
+            $spreadsheet->getActiveSheet()->setCellValue('O5', 'Meta ajustada');
+            $spreadsheet->getActiveSheet()->setCellValue('P5', 'Eficiencia');
+            $spreadsheet->getActiveSheet()->setCellValue('Q5', 'Bonos');
+            $spreadsheet->getActiveSheet()->setCellValue('R5', 'Maquina mala');
+            $spreadsheet->getActiveSheet()->setCellValue('S5', 'No trabajo');
+            $spreadsheet->getActiveSheet()->setCellValue('T5', 'Entrenamiento');
+            $spreadsheet->getActiveSheet()->setCellValue('U5', 'Cambio estilo');
+            $spreadsheet->getActiveSheet()->setCellValue('V5', 'Observaciones');
+
+            $spreadsheet->getActiveSheet()->getStyle('B5:V5')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('5B7786');
+            $spreadsheet->getActiveSheet()->getStyle('B5:V5')->getFont()->getColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE);
+
+            $spreadsheet->getActiveSheet()->getColumnDimension('B')->setWidth(18);
+            $spreadsheet->getActiveSheet()->getColumnDimension('C')->setWidth(30);
+            $spreadsheet->getActiveSheet()->getColumnDimension('D')->setWidth(30);
+            $spreadsheet->getActiveSheet()->getColumnDimension('E')->setWidth(22);
+            $spreadsheet->getActiveSheet()->getColumnDimension('F')->setWidth(22);
+            $spreadsheet->getActiveSheet()->getColumnDimension('G')->setWidth(18);
+            $spreadsheet->getActiveSheet()->getColumnDimension('H')->setWidth(19);
+            $spreadsheet->getActiveSheet()->getColumnDimension('I')->setWidth(19);
+            $spreadsheet->getActiveSheet()->getColumnDimension('J')->setWidth(25);
+            $spreadsheet->getActiveSheet()->getColumnDimension('K')->setWidth(23);
+            $spreadsheet->getActiveSheet()->getColumnDimension('L')->setWidth(25);
+            $spreadsheet->getActiveSheet()->getColumnDimension('M')->setWidth(24);
+            $spreadsheet->getActiveSheet()->getColumnDimension('N')->setWidth(20);
+            $spreadsheet->getActiveSheet()->getColumnDimension('O')->setWidth(20);
+            $spreadsheet->getActiveSheet()->getColumnDimension('P')->setWidth(15);
+            $spreadsheet->getActiveSheet()->getColumnDimension('Q')->setWidth(13);
+            $spreadsheet->getActiveSheet()->getColumnDimension('R')->setWidth(19);
+            $spreadsheet->getActiveSheet()->getColumnDimension('S')->setWidth(16);
+            $spreadsheet->getActiveSheet()->getColumnDimension('T')->setWidth(19);
+            $spreadsheet->getActiveSheet()->getColumnDimension('U')->setWidth(20);
+            $spreadsheet->getActiveSheet()->getColumnDimension('V')->setWidth(70);
+
+            $filaRow = 6;
+            foreach ($data as $item) {
+                $spreadsheet->getActiveSheet()->setCellValue('B' . $filaRow, $item->fecha)->getStyle('B')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('C' . $filaRow, $item->descripcionLinea);
+                $spreadsheet->getActiveSheet()->setCellValue('D' . $filaRow, $item->descripcionEstilo);
+                $spreadsheet->getActiveSheet()->setCellValue('E' . $filaRow, empty($item->operariosNormal) ? 'N/A' : $item->operariosNormal)->getStyle('E')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('F' . $filaRow, empty($item->operariosRefuerzos) ? 'N/A' : $item->operariosRefuerzos)->getStyle('F')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('G' . $filaRow, empty($item->uProducidas) ? 'N/A' : $item->uProducidas)->getStyle('G')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('H' . $filaRow, empty($item->uIrregulares) ? 'N/A' : $item->uIrregulares)->getStyle('H')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('I' . $filaRow, empty($item->uRegulares) ? 'N/A' : $item->uRegulares)->getStyle('I')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('J' . $filaRow, empty($item->metaNormal) ? 'N/A' : $item->metaNormal)->getStyle('J')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('K' . $filaRow, empty($item->totalHorasOrdinarias) ? 'N/A' : $item->totalHorasOrdinarias)->getStyle('K')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('L' . $filaRow, empty($item->totalHorasExtras) ? 'N/A' : $item->totalHorasExtras)->getStyle('L')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('M' . $filaRow, empty($item->totalHorasTrabajadas) ? 'N/A' : $item->totalHorasTrabajadas)->getStyle('M')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('N' . $filaRow, empty($item->horasNoProducidas) ? 'N/A' : $item->horasNoProducidas)->getStyle('N')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('O' . $filaRow, empty($item->horasProducidas) ? 'N/A' : $item->horasProducidas)->getStyle('O')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('P' . $filaRow, empty($item->metaAjustada) ? 'N/A' : $item->metaAjustada)->getStyle('P')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('Q' . $filaRow, empty($item->eficiencia) ? 'N/A' : $item->eficiencia)->getStyle('Q')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('R' . $filaRow, empty($item->bonos) ? 'N/A' : $item->bonos)->getStyle('R')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('S' . $filaRow, empty($item->maquinaMala) ? 'N/A' : $item->maquinaMala)->getStyle('S')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('T' . $filaRow, empty($item->noTrabajo) ? 'N/A' : $item->noTrabajo)->getStyle('T')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('U' . $filaRow, empty($item->entrenamiento) ? 'N/A' : $item->entrenamiento)->getStyle('U')->applyFromArray($arrayCentered);
+                $spreadsheet->getActiveSheet()->setCellValue('V' . $filaRow, strtoupper($item->observaciones));
+                $filaRow = $filaRow + 1;
+            }
+
+            $filaRow = $filaRow - 1;
+
+            $table = new Table('B5:V' . $filaRow, '');
+            $tableStyle = new TableStyle();
+            $tableStyle->setTheme(TableStyle::TABLE_STYLE_LIGHT1);
+            $tableStyle->setShowRowStripes(true);
+            $tableStyle->setShowFirstColumn(true);
+            $table->setStyle($tableStyle);
+            $spreadsheet->getActiveSheet()->addTable($table);
+
+            header("Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
+            $writer = new XLsx($spreadsheet);
+            $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $writer->save("php://output");
+        }
     }
 }
 

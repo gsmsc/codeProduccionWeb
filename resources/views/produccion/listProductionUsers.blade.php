@@ -28,8 +28,9 @@
                     <div class="table-responsive-md">
                         <table class="table table-striped table-hover table-bordered mt-2 text-center table-sm" id="listProductionUsers" style="width: 100%;">
                             <thead>
-                                <th width="6%">Id</th>
+                                <th width="5%">Id</th>
                                 <th>Nombre</th>
+                                <th width="15%">Tipo de usuario</th>
                                 <th>Correo electr&oacute;nico</th>
                                 <th width="8%">Acciones</th>
                             </thead>
@@ -38,6 +39,7 @@
                                 <tr>
                                     <td>{{ $item->id }}</td>
                                     <td>{{ $item->name }}</td>
+                                    <td>{{ $item->nombreRol }}</td>
                                     <td>{{ $item->email }}</td>
                                     <td class="text-center">
                                         @csrf
@@ -83,6 +85,9 @@
                 [5, 10, 50, "Todos"]
             ],
             columns: [{
+                    orderable: true
+                },
+                {
                     orderable: true
                 },
                 {

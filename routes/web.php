@@ -5,6 +5,7 @@ use App\Http\Controllers\LineasController;
 use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\UsuariosController;
+use App\Http\Middleware\PuedeOperarUsuario;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -49,9 +50,9 @@ Route::middleware([
         Route::get('/usuarios/index', 'index')->name('usuarios.index');
         Route::get('/usuarios/create', 'create')->name('usuarios.create');
         Route::post('/usuarios/store', 'store')->name('usuarios.store');
-        Route::get('/usuarios/edit/{idUsuario}', 'edit')->name('usuarios.edit');
-        Route::put('/usuarios/update/{idUsuario}', 'update')->name('usuarios.update');
-        Route::delete('/usuarios/destroy/{idUsuario}', 'destroy')->name('usuarios.destroy');
+        Route::get('/usuarios/edit/{idUsuario}', 'edit')->middleware(PuedeOperarUsuario::class)->name('usuarios.edit');
+        Route::put('/usuarios/update/{idUsuario}', 'update')->middleware(PuedeOperarUsuario::class)->name('usuarios.update');
+        Route::delete('/usuarios/destroy/{idUsuario}', 'destroy')->middleware(PuedeOperarUsuario::class)->name('usuarios.destroy');
         Route::get('/usuarios/configuracion', 'configuracion')->name('usuarios.configuracion');
         Route::put('/usuarios/actualizarDatosUsuario/{id}', 'actualizarDatosUsuario')->name('usuarios.actualizarDatosUsuario');
     });
@@ -66,6 +67,7 @@ Route::middleware([
         Route::get('/produccion/listProductionUsers', 'listProductionUsers')->name('produccion.listProductionUsers');
         Route::get('/produccion/getProductionUsers/{id}', 'getProductionUsers')->name('produccion.getProductionUsers');
         Route::get('/produccion/xlsxPorSupervisor/{idUsuario}', 'xlsxPorSupervisor')->name('produccion.xlsxPorSupervisor');
+        Route::post('/produccion/xlsxPorFecha', 'xlsxPorFecha')->name('produccion.xlsxPorFecha');
         Route::get('/produccion/pdfProduccion/{idProduccion}', 'pdfProduccion')->name('produccion.pdfProduccion');
     });
 });

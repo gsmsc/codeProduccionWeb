@@ -10,6 +10,14 @@ use Spatie\Permission\Models\Role;
 
 class UsuariosController extends Controller
 {
+    function __construct()
+    {
+        $this->middleware('can:Usuarios.Index', ['only' => ['index']]);
+        $this->middleware('can:Usuarios.Crear', ['only' => ['create', 'store']]);
+        $this->middleware('can:Usuarios.Editar', ['only' => ['edit', 'update']]);
+        $this->middleware('can:Usuarios.Eliminar', ['only' => ['destroy']]);
+    }
+
     public function index()
     {
         $usuarios = DB::table('users as USR')

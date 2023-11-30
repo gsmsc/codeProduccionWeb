@@ -22,7 +22,7 @@
             </div>
             <div class="col-sm-6">
                 @can('SuperAdmin.ReporteXLSXSupervisor')
-                <a href="{{ route('produccion.xlsxPorSupervisor', $idUsuario) }}" class="btn btn-success" style="float: right;">Reporte
+                <a href="{{ route('produccion.xlsxPorSupervisor', $idUsuario) }}" class="btn btn-success" style="float: right; background-color: #1F5D39 !important;">Reporte
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-excel-fill" viewBox="0 0 16 16">
                         <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM5.884 6.68 8 9.219l2.116-2.54a.5.5 0 1 1 .768.641L8.651 10l2.233 2.68a.5.5 0 0 1-.768.64L8 10.781l-2.116 2.54a.5.5 0 0 1-.768-.641L7.349 10 5.116 7.32a.5.5 0 1 1 .768-.64z"></path>
                     </svg>
@@ -31,6 +31,37 @@
             </div>
         </div>
         <br>
+        @can('SuperAdmin.FiltradoFecha')
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body" id="card-body-filter">
+                        <label>Reportes por rango de fechas</label>
+                        <form method="POST" action="{{ route('produccion.xlsxPorFecha')}}">
+                            @csrf
+                            <div class="form-inline">
+                                <input type="text" value="{{ $idUsuario }}" name="idUsuario" class="d-none">
+                                <label class="my-1 mr-2" for="dtInicio">Del</label>
+                                <input type="date" id="dtInicio" name="dtInicio" class="form-control my-1 mr-sm-2" required>
+                                <label class="my-1 mr-2" for="dtFinal">Al</label>
+                                <input type="date" id="dtFinal" name="dtFinal" class="form-control my-1 mr-sm-2" required>
+                                <select class="custom-select mr-1" name="formato" id="formato" required>
+                                    <option selected value="">...</option>
+                                    <option value="EXCEL">EXCEL</option>
+                                    <!-- <option value="PDF">PDF</option> -->
+                                </select>
+                                <button id="btnGenerarReporte" class="btn btn-dark my-1" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="Generar reporte">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-arrow-up-fill" viewBox="0 0 16 16">
+                                        <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V12.5a.5.5 0 0 1-1 0V8.707z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endcan
         <div class="card">
             <div class="card-body">
                 <div class="row">
@@ -89,6 +120,8 @@
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 <script>
+    $('#btnGenerarReporte').attr("disabled", true);
+
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
@@ -122,6 +155,14 @@
                 "url": "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Spanish.json"
             }
         });
+    });
+
+    $("#card-body-filter").change(function() {
+        if ($('#dtInicio').val() != '' && $('#dtFinal').val() != '') {
+            $('#btnGenerarReporte').attr("disabled", false);
+        } else {
+            $('#btnGenerarReporte').attr("disabled", true);
+        }
     });
 </script>
 @stop
