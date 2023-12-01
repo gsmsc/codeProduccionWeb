@@ -535,7 +535,7 @@ class ProduccionController extends Controller
         $pdf->Output('Produccion #' . $idProduccion . ' - ' . $hora . '.pdf', 'I');
     }
 
-    public function xlsxPorFecha(Request $request)
+    public function reportesPorFechas(Request $request)
     {
         if ($request->formato == 'EXCEL') {
 
@@ -729,6 +729,159 @@ class ProduccionController extends Controller
             $writer = new XLsx($spreadsheet);
             $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
             $writer->save("php://output");
+        } else {
+            $pdf = new MYPDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+            $pdf->setPrintHeader(false);
+            $pdf->SetCreator(PDF_CREATOR);
+            $pdf->SetAuthor('WELLS APPAREL Nicaragua S.A.');
+            $pdf->SetTitle('Produccion por rango de fecha del ' . $request->dtInicio . ' al ' . $request->dtFinal);
+            $registro = DB::table('tblProduccion as PROD')
+                ->select(
+                    'PROD.id',
+                    'PROD.idUsuario',
+                    'USR.name',
+                    'PROD.fecha',
+                    'EST.codigo',
+                    'EST.descripcion as descripcionEstilo',
+                    'LIN.descripcion as descripcionLinea',
+                    'PROD.operariosNormal',
+                    'PROD.operariosRefuerzos',
+                    'PROD.uProducidas',
+                    'PROD.uIrregulares',
+                    'PROD.uRegulares',
+                    'PROD.metaNormal',
+                    'PROD.totalHorasOrdinarias',
+                    'PROD.totalHorasExtras',
+                    'PROD.totalHorasTrabajadas',
+                    'PROD.horasNoProducidas',
+                    'PROD.horasProducidas',
+                    'PROD.metaAjustada',
+                    'PROD.eficiencia',
+                    'PROD.bonos',
+                    'PROD.maquinaMala',
+                    'PROD.noTrabajo',
+                    'PROD.entrenamiento',
+                    'PROD.cambioEstilo',
+                    'PROD.observaciones'
+                )
+                ->leftJoin('users as USR', 'PROD.idUsuario', '=', 'USR.id')
+                ->leftJoin('CAT_lineas as LIN', 'PROD.idLinea', '=', 'LIN.id')
+                ->leftJoin('CAT_estilos as EST', 'PROD.idEstilo', '=', 'EST.id')
+                ->whereBetween('PROD.created_at', [$request->dtInicio, $request->dtFinal])
+                ->where('PROD.idUsuario', '=', $request->idUsuario)
+                ->get();
+            if (count($registro) == 0) {
+                return redirect()->back()->with('info', 'No existen registros en este rango de fechas');
+            }
+            $pdf->setHeaderFont(array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
+            $pdf->setFooterFont(array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+            $pdf->SetMargins(PDF_MARGIN_LEFT, false, PDF_MARGIN_RIGHT);
+            $pdf->SetHeaderMargin(false);
+
+            $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+            $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+            $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+            $pdf->SetFont('helvetica', '', 210);
+
+            foreach ($registro as $items) {
+                $pdf->AddPage();
+                $logo1 = $pdf->Image('assets/LogoWELLS.jpeg', 14.8, 11, 50, 25, 'JPEG', '', 'C', false, 300, '', false, false, 1, false, false, false);
+                $pdf->headerPDF($logo1);
+
+                $pdf->Ln(13);
+                $pdf->SetFont('times', 'B');
+                $pdf->SetFillColor(255, 255, 255);
+                $pdf->SetTextColor(0, 0, 0);
+                $pdf->SetFont('times', '', 12, 'B', true);
+                $pdf->Cell(75, 8, 'FECHA ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8,  date("d/m/Y", strtotime($items->fecha)), 1, 0, 'C', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'LÍNEA/DEPARTAMENTO ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->descripcionLinea, 1, 0, 'C', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'ESTILO ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(90, 8, $items->descripcionEstilo, 1, 0, 'C', 1, '', 0);
+                $pdf->Cell(15, 8, '', 1, 0, 'C', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'OPERARIOS ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(35, 8, 'NORMAL: ' . $items->operariosNormal, 1, 0, 'L', 1, '', 0);
+                $pdf->Cell(70, 8, 'REFUERZOS: ' . $items->operariosRefuerzos, 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'UNIDADES PRODUCIDAS ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->uProducidas, 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'MENOS: UNIDADES IRREGULARES ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->uIrregulares, 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'UNIDADES REGULARES ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->uRegulares, 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'META NORMAL ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(90, 8, $items->metaNormal, 1, 0, 'L', 1, '', 0);
+                $pdf->Cell(15, 8, '', 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'TOTAL HORAS ORDINARIAS ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->totalHorasOrdinarias, 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'TOTAL HORAS EXTRAS ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->totalHorasExtras, 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'TOTAL HORAS TRABAJADAS ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->totalHorasTrabajadas, 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'MENOS: HORAS NO PRODUCIDAS ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->horasNoProducidas, 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'TOTAL HORAS PRODUCIDAS ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->horasProducidas, 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'META AJUSTADA ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(90, 8, $items->metaAjustada, 1, 0, 'L', 1, '', 0);
+                $pdf->Cell(15, 8, '', 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'EFICIENCIA ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->eficiencia . '%', 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'BONOS ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(105, 8, $items->bonos, 1, 0, 'L', 1, '', 0);
+                $pdf->Ln(10);
+                $pdf->Cell(180, 8, 'HORAS NO PRODUCIDAS', 0, 0, 'C', 1, '', 0);
+                $pdf->Ln(10);
+                $pdf->Cell(75, 8, 'MAQUINA MALA ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(90, 8, $items->maquinaMala, 1, 0, 'L', 1, '', 0);
+                $pdf->Cell(15, 8, 'HORA', 1, 0, 'C', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'NO TRABAJO ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(90, 8, $items->noTrabajo, 1, 0, 'L', 1, '', 0);
+                $pdf->Cell(15, 8, 'HORA', 1, 0, 'C', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'ENTRENAMIENTO ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(90, 8, $items->entrenamiento, 1, 0, 'L', 1, '', 0);
+                $pdf->Cell(15, 8, 'HORA', 1, 0, 'C', 1, '', 0);
+                $pdf->Ln(8);
+                $pdf->Cell(75, 8, 'CAMBIO DE ESTILO ', 1, 0, 'R', 1, '', 0);
+                $pdf->Cell(90, 8, $items->cambioEstilo, 1, 0, 'L', 1, '', 0);
+                $pdf->Cell(15, 8, 'HORA', 1, 0, 'C', 1, '', 0);
+                $pdf->Ln(10);
+                $pdf->Cell(180, 8, 'OBSERVACIONES', 0, 0, 'C', 1, '', 0);
+                $pdf->Ln(10);
+                $pdf->MultiCell(180, 20, ' ' . strtoupper($items->observaciones), 1, '', 0, 1, '', '', true);
+                $pdf->Ln(20);
+
+                $centerX = $pdf->GetX();
+                $centerY = $pdf->GetY();
+
+                $lineStartX = $centerX + 60;
+                $lineEndX = $centerX + 120;
+                $pdf->Cell(180, 8, $items->name, 0, 0, 'C', 1, '', 0);
+                $pdf->Line($lineStartX, $centerY, $lineEndX, $centerY);
+            }
+
+            $pdf->Output('Produccion por rango de fecha del ' . $request->dtInicio . ' al ' . $request->dtFinal . '.pdf', 'I');
         }
     }
 }
